@@ -11,6 +11,8 @@ defmodule Giocci do
   use GenServer
   require Logger
 
+  @timeout_ms 180_000
+
   #
   # Client API
   #
@@ -28,7 +30,7 @@ defmodule Giocci do
   #
   @impl true
   def handle_call({:detect, binary, destination}, _from, state) do
-    detection = GenServer.call(state.relay, {:detect, binary, destination})
+    detection = GenServer.call(state.relay, {:detect, binary, destination}, @timeout_ms)
 
     {:reply, detection, state}
   end
@@ -79,7 +81,7 @@ defmodule Giocci do
   end
 
   def detect(binary, destination) do
-    GenServer.call(__MODULE__, {:detect, binary, destination})
+    GenServer.call(__MODULE__, {:detect, binary, destination}, @timeout_ms)
   end
 
   def get(vcontact_id) do
