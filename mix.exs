@@ -1,9 +1,9 @@
-defmodule GiocciLib.MixProject do
+defmodule Giocci.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :giocci_lib,
+      app: :giocci,
       version: "0.1.0",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
