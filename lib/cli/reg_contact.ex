@@ -1,9 +1,9 @@
-defmodule GiocciLib.CLI.RegContact do
+defmodule Giocci.CLI.RegContact do
   @moduledoc """
   接点をGiocciに登録する。
 
   ## 例
-      iex> GiocciLib.CLI.RegContact.start_register(
+      iex> Giocci.CLI.RegContact.start_register(
       ...> [
       ...>   {:global, :relay},
       ...>   [
