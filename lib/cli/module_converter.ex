@@ -3,7 +3,7 @@ defmodule Giocci.CLI.ModuleConverter do
   moduleをBase64エンコードする。
 
   ## Example
-      iex> encode(MODULE_NAME)
+      iex> Giocci.CLI.ModuleConverter.encode(MODULE_NAME)
   """
   def encode(module) do
     module
@@ -16,7 +16,7 @@ defmodule Giocci.CLI.ModuleConverter do
   Base64エンコードされたmoduleをデコードする。
 
   ## Exmaple
-      iex> decode(encode_module)
+      iex> Giocci.CLI.ModuleConverter.decode(encode_module)
   """
   def decode(encode_module) do
     {name, binary, path} =
@@ -31,9 +31,9 @@ defmodule Giocci.CLI.ModuleConverter do
   デコードされたmoduleを読み込む。
 
   ## Example
-      iex> load({name, binary, path})
+      iex> Giocci.CLI.ModuleConverter.load({name, binary, path})
       or
-      iex> decode(encode_module) |> load()
+      iex> Giocci.CLI.ModuleConverter.decode(encode_module) |> Giocci.CLI.ModuleConverter.load()
   """
   def load({name, binary, path}) do
     :code.load_binary(name, path, binary)
