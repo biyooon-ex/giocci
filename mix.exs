@@ -5,7 +5,7 @@ defmodule Giocci.MixProject do
   Client Library for Giocci (computational resource permeating wide-area distributed platform towards the B5G era)
   """
 
-  @version "0.1.0"
+  @version "0.2.0"
   @source_url "https://github.com/b5g-ex/giocci"
 
   def project do
