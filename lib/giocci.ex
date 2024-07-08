@@ -63,6 +63,12 @@ defmodule Giocci do
     {:noreply, state}
   end
 
+  def handle_cast({:put_detect_log, total_timie, processing_time, model, backend}, state) do
+    GenServer.cast(state.relay, {:put_detect_log, total_timie, processing_time, model, backend})
+
+    {:noreply, state}
+  end
+
   @impl true
   def init(state) do
     {:ok, state}
@@ -97,5 +103,9 @@ defmodule Giocci do
   end
 
   def put() do
+  end
+
+  def put_detect_log(total_timie, processing_time, model, backend) do
+    GenServer.cast(__MODULE__, {:put_detect_log, total_timie, processing_time, model, backend})
   end
 end
