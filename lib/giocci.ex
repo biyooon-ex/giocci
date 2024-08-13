@@ -57,6 +57,13 @@ defmodule Giocci do
   end
 
   @impl true
+  def handle_call({:module_save, encode_module}, _from, state) do
+    module_save_reply = GenServer.call(state.relay, {:module_save, encode_module})
+
+    {:reply, module_save_reply, state}
+  end
+
+  @impl true
   def handle_cast({:delete, vcontact_id}, state) do
     GenServer.cast(state.relay, {:delete, vcontact_id})
 
@@ -100,6 +107,12 @@ defmodule Giocci do
 
   def list_filter(filter_key, filter_value) do
     GenServer.call(__MODULE__, {:list_filter, filter_key, filter_value})
+  end
+
+  def module_save(module) do
+    encode_module = Giocci.CLI.ModuleConverter.encode(module)
+
+    GenServer.call(__MODULE__, {:module_save, encode_module})
   end
 
   def put() do
