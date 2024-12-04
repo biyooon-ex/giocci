@@ -132,4 +132,76 @@ defmodule Giocci do
   def rpc(module, function, arity) do
     GenServer.call(__MODULE__, {:rpc, module, function, arity})
   end
+
+
+
+
+  def start_link_session_rc() do
+    ##RelayのZenohセッションを起動
+    {:ok,session} = Zenohex.open
+    {:ok, subscriber} = Zenohex.Session.declare_subscriber(session,"from/relay/to/client")
+    state = %{subscriber: subscriber, callback: &IO.inspect/1 ,id: RCsession}
+    GenServer.start_link(__MODULE__, state, name: RCsession)
+
+    recv_timeout(state)
+    {:ok, state}
+
+  end
+
+  # def init(session) do
+  #   IO.inspect("pass")
+  #   {:ok, session}
+  # end
+
+  # def handle_call(:call_session, _from, session) do
+  #   {:reply, session, session}
+  # end
+
+  def handle_info(:loop, state) do
+    IO.inspect("pass3")
+    recv_timeout(state)
+    {:noreply, state}
+  end
+
+
+  def setup_client() do
+
+    ##GenServerにsession情報を保存
+    {:ok, stater} = start_link_session_rc()
+    # sessioncl = GenServer.call(CRsession,:call_session)
+    # sessionen = GenServer.call(ERsession,:call_session)
+    ##ClientからRelay，EngineからRelayへののサブスクライブの準備
+
+  end
+
+
+
+  defp recv_timeout(state) do
+
+
+
+    IO.inspect(state.id)
+
+
+    # GenServer.cast(ERsession, {:sub_start,"from/client/to/relay"})
+    case Zenohex.Subscriber.recv_timeout(state.subscriber,10000000) do
+      {:ok, sample} ->
+        state.callback.(sample)
+        send(state.id, :loop)
+
+      {:error, :timeout} ->
+        IO.inspect("pass")
+        send(state.id, :loop)
+
+      {:error, error} ->
+        Logger.error(inspect(error))
+    end
+  end
+
+
+
+
+
+
+
 end
