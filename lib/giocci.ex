@@ -57,20 +57,6 @@ defmodule Giocci do
   end
 
   @impl true
-  def handle_call({:module_save, encode_module}, _from, state) do
-    module_save_reply = GenServer.call(state.relay, {:module_save, encode_module})
-
-    {:reply, module_save_reply, state}
-  end
-
-  @impl true
-  def handle_call({:rpc, module, function, arity}, _from, state) do
-    rpc_reply = GenServer.call(state.relay, {:rpc, module, function, arity})
-
-    {:reply, rpc_reply, state}
-  end
-
-  @impl true
   def handle_cast({:delete, vcontact_id}, state) do
     GenServer.cast(state.relay, {:delete, vcontact_id})
 
@@ -118,7 +104,6 @@ defmodule Giocci do
 
   def module_save(module) do
     encode_module = [Giocci.CLI.ModuleConverter.encode(module), :module_save]
-    # IO.inspect(encode_module)
     ## zenohを起動してpub
     {:ok, session} = Zenohex.open()
     {:ok, publisher} = Zenohex.Session.declare_publisher(session, "from/client/to/relay")
@@ -141,8 +126,6 @@ defmodule Giocci do
       publisher,
       [module, function, arity, :module_exec] |> :erlang.term_to_binary() |> Base.encode64()
     )
-
-    # GenServer.call(__MODULE__, {:rpc, module, function, arity})
   end
 
   def callback(state, m) do
@@ -187,15 +170,12 @@ defmodule Giocci do
 
   defp recv_timeout(state) do
     ## subを永続化する関数
-    # IO.inspect(state.id)
-
     case Zenohex.Subscriber.recv_timeout(state.subscriber, 10_000) do
       {:ok, sample} ->
         state.callback.(state, sample)
         send(state.id, :loop)
 
       {:error, :timeout} ->
-        # IO.inspect("pass")
         send(state.id, :loop)
 
       {:error, error} ->
