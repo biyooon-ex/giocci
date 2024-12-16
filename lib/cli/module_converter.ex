@@ -38,11 +38,4 @@ defmodule Giocci.CLI.ModuleConverter do
   def load({name, binary, path}) do
     :code.load_binary(name, path, binary)
   end
-
-
-
-
-
-
-
 end
