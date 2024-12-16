@@ -142,7 +142,8 @@ defmodule Giocci do
     IO.inspect(msg)
   end
 
-  def start_link_session_rc() do
+  def start_link() do
+    ## RelayからClientに返送するsubをセットアップする
     ## ClientのZenohセッションを起動
     {:ok, session} = Zenohex.open()
     ## subのキーをたてる
@@ -161,11 +162,6 @@ defmodule Giocci do
   def handle_info(:loop, state) do
     recv_timeout(state)
     {:noreply, state}
-  end
-
-  def setup_client() do
-    ## RelayからClientに返送するsubをセットアップする
-    {:ok, stater} = start_link_session_rc()
   end
 
   defp recv_timeout(state) do
