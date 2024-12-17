@@ -34,6 +34,8 @@ defmodule GiocciZenoh do
     {:ok, publisher} =
       Zenohex.Session.declare_publisher(session, "from/" <> client_name <> "/to/" <> relay_name)
 
+    IO.inspect("from/" <> client_name <> "/to/" <> relay_name)
+
     Zenohex.Publisher.put(
       publisher,
       [module, function, arity, :module_exec] |> :erlang.term_to_binary() |> Base.encode64()
