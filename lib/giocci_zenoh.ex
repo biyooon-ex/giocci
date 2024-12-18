@@ -13,11 +13,12 @@ defmodule GiocciZenoh do
 
   def module_save(module) do
     client_name = "client1"
-    relay_name = "relay1"
+    relay_name = "relay2"
     encode_module = [Giocci.CLI.ModuleConverter.encode(module), :module_save]
     ## zenohを起動してpub
 
     {:ok, session} = Zenohex.open()
+    IO.inspect("from/" <> client_name <> "/to/" <> relay_name)
 
     {:ok, publisher} =
       Zenohex.Session.declare_publisher(session, "from/" <> client_name <> "/to/" <> relay_name)
@@ -28,7 +29,7 @@ defmodule GiocciZenoh do
   def module_exec(module, function, arity) do
     ## zenohを起動してpub
     client_name = "client1"
-    relay_name = "relay1"
+    relay_name = "relay2"
     {:ok, session} = Zenohex.open()
 
     {:ok, publisher} =
@@ -46,21 +47,21 @@ defmodule GiocciZenoh do
     ## 　Engineから(Relayを通して)送られたメッセージを抽出し、表示
     %{
       key_expr: erkey,
-      value: messageinter,
+      value: message_intermediate,
       kind: kind,
       reference: reference
     } = message
 
-    msg = messageinter |> Base.decode64!() |> :erlang.binary_to_term()
+    readable_msg = message_intermediate |> Base.decode64!() |> :erlang.binary_to_term()
 
-    IO.inspect(msg)
+    IO.inspect(readable_msg)
   end
 
   def start_link() do
     ## RelayからClientに返送するsubをセットアップする
     ## ClientのZenohセッションを起動
     client_name = "client1"
-    relay_name = "relay1"
+    relay_name = "relay2"
     {:ok, session} = Zenohex.open()
     ## subのキーをたてる
     {:ok, subscriber} =
