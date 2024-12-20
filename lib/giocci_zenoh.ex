@@ -1,10 +1,10 @@
 defmodule GiocciZenoh do
   @moduledoc """
-  `Giocci.start_link([DESTINATION_GIOCCI_RELAY])` で起動する。
+  `GiocciZenoh.start_link()` で起動する。
 
   ## Examples
 
-      iex> Giocci.start_link([{:global, :relay}])
+      iex> GiocciZenoh.start_link()
 
   """
 
@@ -12,30 +12,19 @@ defmodule GiocciZenoh do
   require Logger
 
   def module_save(module) do
-    client_name = "client1"
-    relay_name = "relay2"
     encode_module = [Giocci.CLI.ModuleConverter.encode(module), :module_save]
     ## zenohを起動してpub
 
-    {:ok, session} = Zenohex.open()
-    IO.inspect("from/" <> client_name <> "/to/" <> relay_name)
-
-    {:ok, publisher} =
-      Zenohex.Session.declare_publisher(session, "from/" <> client_name <> "/to/" <> relay_name)
-
+    [publisher, client_name, relay_name] = GenServer.call(Relay2Clientsession, :call_publisher)
+    Logger.info("from/" <> client_name <> "/to/" <> relay_name)
     Zenohex.Publisher.put(publisher, encode_module |> :erlang.term_to_binary() |> Base.encode64())
   end
 
   def module_exec(module, function, arity) do
     ## zenohを起動してpub
-    client_name = "client1"
-    relay_name = "relay2"
-    {:ok, session} = Zenohex.open()
+    [publisher, client_name, relay_name] = GenServer.call(Relay2Clientsession, :call_publisher)
 
-    {:ok, publisher} =
-      Zenohex.Session.declare_publisher(session, "from/" <> client_name <> "/to/" <> relay_name)
-
-    IO.inspect("from/" <> client_name <> "/to/" <> relay_name)
+    Logger.info("from/" <> client_name <> "/to/" <> relay_name)
 
     Zenohex.Publisher.put(
       publisher,
@@ -52,37 +41,58 @@ defmodule GiocciZenoh do
       reference: reference
     } = message
 
-    readable_msg = message_intermediate |> Base.decode64!() |> :erlang.binary_to_term()
+    case erkey do
+      "from/relay1/to/client1" = erkay ->
+        message_readable = message_intermediate |> Base.decode64!() |> :erlang.binary_to_term()
+        IO.inspect(message_readable)
 
-    IO.inspect(readable_msg)
+      _ = erkey ->
+        Logger.error(inspect("no match"))
+    end
   end
 
   def start_link() do
     ## RelayからClientに返送するsubをセットアップする
     ## ClientのZenohセッションを起動
     client_name = "client1"
-    relay_name = "relay2"
+    relay_name = "relay1"
     {:ok, session} = Zenohex.open()
     ## subのキーをたてる
     {:ok, subscriber} =
       Zenohex.Session.declare_subscriber(session, "from/" <> relay_name <> "/to/" <> client_name)
 
+    {:ok, publisher} =
+      Zenohex.Session.declare_publisher(session, "from/" <> client_name <> "/to/" <> relay_name)
+
     ## 状態として次の状態をもつ
-    state = %{subscriber: subscriber, callback: &callback/2, id: Relay2Clientsession}
+    state = %{
+      subscriber: subscriber,
+      publisher: publisher,
+      callback: &callback/2,
+      id: Relay2Clientsession,
+      session: session,
+      client_name: "client1",
+      relay_name: "relay2"
+    }
 
     ## 上記の状態を保存する用のGenServerの起動
     GenServer.start_link(__MODULE__, state, name: Relay2Clientsession)
     ## subの開始
-    recv_timeout(state)
+    subscriber_loop(state)
     {:ok, state}
   end
 
+  def handle_call(:call_publisher, from, state) do
+    reply = [state.publisher, state.client_name, state.relay_name]
+    {:reply, reply, state}
+  end
+
   def handle_info(:loop, state) do
-    recv_timeout(state)
+    subscriber_loop(state)
     {:noreply, state}
   end
 
-  defp recv_timeout(state) do
+  defp subscriber_loop(state) do
     ## subを永続化する関数
     case Zenohex.Subscriber.recv_timeout(state.subscriber, 10_000) do
       {:ok, sample} ->
