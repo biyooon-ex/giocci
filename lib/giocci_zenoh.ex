@@ -11,17 +11,21 @@ defmodule GiocciZenoh do
   use GenServer
   require Logger
 
-  def module_save(module) do
-    encode_module = [Giocci.CLI.ModuleConverter.encode(module), :module_save]
-    ## zenohを起動してpub
+  @client_name "client1"
+  @relay_name "relay1"
 
+  def module_save(module) do
+    ## モジュールをエンコードする
+    encode_module = [Giocci.CLI.ModuleConverter.encode(module), :module_save]
+
+    ## publisherをセッションから作成しpublishする
     [publisher, client_name, relay_name] = GenServer.call(Relay2Clientsession, :call_publisher)
     Logger.info("from/" <> client_name <> "/to/" <> relay_name)
     Zenohex.Publisher.put(publisher, encode_module |> :erlang.term_to_binary() |> Base.encode64())
   end
 
   def module_exec(module, function, arity) do
-    ## zenohを起動してpub
+    ## publisherをセッションから作成しpublishする
     [publisher, client_name, relay_name] = GenServer.call(Relay2Clientsession, :call_publisher)
 
     Logger.info("from/" <> client_name <> "/to/" <> relay_name)
@@ -42,7 +46,7 @@ defmodule GiocciZenoh do
     } = message
 
     case erkey do
-      "from/relay1/to/client1" = erkay ->
+      "from/" <> @relay_name <> "/to/" <> @client_name = erkay ->
         message_readable = message_intermediate |> Base.decode64!() |> :erlang.binary_to_term()
         IO.inspect(message_readable)
 
@@ -54,8 +58,8 @@ defmodule GiocciZenoh do
   def start_link() do
     ## RelayからClientに返送するsubをセットアップする
     ## ClientのZenohセッションを起動
-    client_name = "client1"
-    relay_name = "relay1"
+    client_name = @client_name
+    relay_name = @relay_name
     {:ok, session} = Zenohex.open()
     ## subのキーをたてる
     {:ok, subscriber} =
@@ -71,8 +75,8 @@ defmodule GiocciZenoh do
       callback: &callback/2,
       id: Relay2Clientsession,
       session: session,
-      client_name: "client1",
-      relay_name: "relay2"
+      client_name: client_name,
+      relay_name: relay_name
     }
 
     ## 上記の状態を保存する用のGenServerの起動
