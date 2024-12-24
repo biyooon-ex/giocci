@@ -108,6 +108,9 @@ defmodule GiocciZenoh do
 
       {:error, error} ->
         Logger.error(inspect(error))
+
+      {_, _} ->
+        Logger.error("unexpected error")
     end
   end
 end
