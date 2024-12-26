@@ -45,8 +45,9 @@ defmodule GiocciZenoh do
     create_session(@relay_name)
   end
 
+  ## 　Engineから(Relayを通して)送られたメッセージを抽出し、表示
+
   def callback(state, message) do
-    ## 　Engineから(Relayを通して)送られたメッセージを抽出し、表示
     %{
       key_expr: erkey,
       value: message_intermediate,
@@ -60,8 +61,11 @@ defmodule GiocciZenoh do
     match_key(erkey, relay_list, message_readable)
   end
 
+  @doc """
+    RelayからClientに返送するpubsubをセットアップする
+  """
+
   def start_link(relay_name) do
-    ## RelayからClientに返送するsubをセットアップする
     ## ClientのZenohセッションを起動
     client_name = @client_name
     {:ok, session} = Zenohex.open()
@@ -121,16 +125,16 @@ defmodule GiocciZenoh do
     :ok
   end
 
+  ## セッションを作る関数
   defp create_session(relay_list) do
-    ## セッションを作る関数
     [relay_name | tail] = relay_list
 
     start_link(relay_name)
     create_session(tail)
   end
 
+  ## subを永続化する関数
   defp subscriber_loop(state) do
-    ## subを永続化する関数
     case Zenohex.Subscriber.recv_timeout(state.subscriber, 10_000) do
       {:ok, sample} ->
         state.callback.(state, sample)
