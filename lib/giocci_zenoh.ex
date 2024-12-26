@@ -17,10 +17,10 @@ defmodule GiocciZenoh do
   def module_save(module, relay_name_tosend) do
     ## モジュールをエンコードする
     encode_module = [Giocci.CLI.ModuleConverter.encode(module), :module_save]
-    id_string = @client_name <> relay_name_tosend
+    id = (@client_name <> relay_name_tosend) |> String.to_atom()
     ## publisherをセッションから作成しpublishする
     [publisher, client_name, relay_name] =
-      GenServer.call(String.to_atom(id_string), :call_publisher)
+      GenServer.call(id, :call_publisher)
 
     Logger.info("from/" <> client_name <> "/to/" <> relay_name)
     Zenohex.Publisher.put(publisher, encode_module |> :erlang.term_to_binary() |> Base.encode64())
@@ -28,10 +28,10 @@ defmodule GiocciZenoh do
 
   def module_exec(module, function, arity, relay_name_tosend) do
     ## publisherをセッションから作成しpublishする
-    id_string = @client_name <> relay_name_tosend
+    id = (@client_name <> relay_name_tosend) |> String.to_atom()
 
     [publisher, client_name, relay_name] =
-      GenServer.call(String.to_atom(id_string), :call_publisher)
+      GenServer.call(id, :call_publisher)
 
     Logger.info("from/" <> client_name <> "/to/" <> relay_name)
 
@@ -57,19 +57,29 @@ defmodule GiocciZenoh do
     relay_list = @relay_name
     message_readable = message_intermediate |> Base.decode64!() |> :erlang.binary_to_term()
 
+    match_key(erkey, relay_list, message_readable)
+  end
+
+  defp match_key(erkey, relay_list, message_readable) do
     Enum.each(relay_list, fn relay_name ->
-      case "from/" <> relay_name <> "/to/" <> @client_name do
-        erkey -> Logger.info(message_readable, erkey)
-        _ -> IO.puts("No match")
+      key_applicant = "from/" <> relay_name <> "/to/" <> @client_name
+
+      case key_applicant do
+        ^erkey ->
+          Logger.info("message from #{relay_name} key name is  #{key_applicant}")
+          Logger.info("#{inspect(message_readable)}")
+
+        _ ->
+          nil
       end
+
+      # if erkey == key_applicant do
+      #   Logger.info("message from #{relay_name} key name is  #{key_applicant}")
+      #   Logger.info("#{inspect(message_readable)}")
+      # else
+      #   Logger.info("this is not matched key #{key_applicant}")
+      # end
     end)
-
-    # case erkey do
-    #   "from/" <> relay_list <> "/to/" <> @client_name = erkey ->
-
-    #   _ = erkey ->
-    #     Logger.error(inspect("no match"))
-    # end
   end
 
   def start_link(relay_name) do
@@ -84,21 +94,21 @@ defmodule GiocciZenoh do
     {:ok, publisher} =
       Zenohex.Session.declare_publisher(session, "from/" <> client_name <> "/to/" <> relay_name)
 
-    id_string = client_name <> relay_name
+    id = (client_name <> relay_name) |> String.to_atom()
     ## 状態として次の状態をもつ
     state = %{
       subscriber: subscriber,
       publisher: publisher,
       callback: &callback/2,
-      id: String.to_atom(id_string),
+      id: id,
       session: session,
       client_name: client_name,
       relay_name: relay_name
     }
 
     ## 上記の状態を保存する用のGenServerの起動
-    Logger.info(id_string)
-    GenServer.start_link(__MODULE__, state, name: String.to_atom(id_string))
+    Logger.info(id)
+    GenServer.start_link(__MODULE__, state, name: id)
     ## subの開始
     subscriber_loop(state)
     {:ok, state}
