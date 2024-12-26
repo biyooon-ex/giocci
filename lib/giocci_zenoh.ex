@@ -60,28 +60,6 @@ defmodule GiocciZenoh do
     match_key(erkey, relay_list, message_readable)
   end
 
-  defp match_key(erkey, relay_list, message_readable) do
-    Enum.each(relay_list, fn relay_name ->
-      key_applicant = "from/" <> relay_name <> "/to/" <> @client_name
-
-      case key_applicant do
-        ^erkey ->
-          Logger.info("message from #{relay_name} key name is  #{key_applicant}")
-          Logger.info("#{inspect(message_readable)}")
-
-        _ ->
-          nil
-      end
-
-      # if erkey == key_applicant do
-      #   Logger.info("message from #{relay_name} key name is  #{key_applicant}")
-      #   Logger.info("#{inspect(message_readable)}")
-      # else
-      #   Logger.info("this is not matched key #{key_applicant}")
-      # end
-    end)
-  end
-
   def start_link(relay_name) do
     ## RelayからClientに返送するsubをセットアップする
     ## ClientのZenohセッションを起動
@@ -124,16 +102,27 @@ defmodule GiocciZenoh do
     {:noreply, state}
   end
 
+  defp match_key(erkey, relay_list, message_readable) do
+    Enum.each(relay_list, fn relay_name ->
+      key_applicant = "from/" <> relay_name <> "/to/" <> @client_name
+
+      case key_applicant do
+        ^erkey ->
+          Logger.info("message from #{relay_name} key name is  #{key_applicant}")
+          Logger.info("#{inspect(message_readable)}")
+
+        _ ->
+          nil
+      end
+    end)
+  end
+
   defp create_session([]) do
     :ok
   end
 
-  @doc """
-    セッションを作る関数
-
-  """
-
   defp create_session(relay_list) do
+    ## セッションを作る関数
     [relay_name | tail] = relay_list
 
     start_link(relay_name)
