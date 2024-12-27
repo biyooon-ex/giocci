@@ -45,7 +45,9 @@ defmodule GiocciZenoh do
     create_session(@relay_name)
   end
 
-  ## 　Engineから(Relayを通して)送られたメッセージを抽出し、表示
+  @doc """
+    Engineから(Relayを通して)送られたメッセージを抽出し、表示
+  """
   def callback(state, message) do
     %{
       key_expr: erkey,
