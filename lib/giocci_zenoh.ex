@@ -46,7 +46,6 @@ defmodule GiocciZenoh do
   end
 
   ## 　Engineから(Relayを通して)送られたメッセージを抽出し、表示
-
   def callback(state, message) do
     %{
       key_expr: erkey,
@@ -64,7 +63,6 @@ defmodule GiocciZenoh do
   @doc """
     RelayからClientに返送するpubsubをセットアップする
   """
-
   def start_link(relay_name) do
     ## ClientのZenohセッションを起動
     client_name = @client_name
