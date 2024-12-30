@@ -11,8 +11,12 @@ defmodule GiocciZenoh do
   use GenServer
   require Logger
 
-  @client_name Application.get_env(:giocci_zenoh, :system_variables)[:my_node_name]
-  @relay_name Application.get_env(:giocci_zenoh, :system_variables)[:relay_node_name]
+  @client_name Application.compile_env(
+                 :giocci_zenoh,
+                 [:system_variables, :my_node_name],
+                 "client1"
+               )
+  @relay_name Application.get_env(:giocci_zenoh, [:system_variables, :relay_node_name], ["relay1"])
 
   def module_save(module, relay_name_tosend) do
     ## モジュールをエンコードする
