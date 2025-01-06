@@ -25,8 +25,8 @@ defmodule GiocciLog do
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
   end
 
-  def handle_cast(:put_start_time, state) do
-    new_state = %{start_time: System.monotonic_time(:microsecond), type: state.type}
+  def handle_cast({:put_start_status, type}, state) do
+    new_state = %{start_time: System.monotonic_time(:microsecond), type: type}
     {:noreply, new_state}
   end
 
@@ -34,25 +34,35 @@ defmodule GiocciLog do
     {:reply, state, state}
   end
 
-  def module_exec_log(0) do
+  def module_exec_log(0, _) do
     :ok
   end
 
-  def module_exec_log(n) do
-    GenServer.cast(__MODULE__, :put_start_time)
+  def module_exec_log(n, type) do
+    case type do
+      "zenoh" ->
+        GenServer.cast(__MODULE__, {:put_start_status, type})
 
-    GiocciZenoh.module_exec(Giocci.Hello, :world, ["kazuma"], "relay1")
-    Process.sleep(1000)
-    module_exec_log(n - 1)
+        GiocciZenoh.module_exec(Giocci.Hello, :world, ["kazuma"], "relay1")
+        Process.sleep(1000)
+
+      "Erlang" ->
+        GenServer.cast(__MODULE__, {:put_start_status, type})
+        Giocci.rpc(Giocci.Hello, :world, ["kazuma"])
+        finish_time([{50_000_000, "dummy"}, "dummy"])
+        Process.sleep(1000)
+    end
+
+    module_exec_log(n - 1, type)
   end
 
-  def finish_time do
+  def finish_time(message) do
     finish_time = System.monotonic_time(:microsecond)
-    type = "zenoh?"
+    [{processing_time, result}, _from_engine] = message
     %{start_time: start_time, type: type} = GenServer.call(__MODULE__, :get_start_time)
 
     giocci_time = finish_time - start_time
-    put_log(start_time, finish_time, giocci_time, type)
+    put_log(start_time, processing_time, giocci_time, type)
   end
 
   def get_local_time() do
@@ -60,7 +70,7 @@ defmodule GiocciLog do
     local_time = "#{year}-#{month}-#{day} #{time}:#{min}:#{sec}"
   end
 
-  def put_log(start_time, finish_time, giocci_time, type) do
+  def put_log(start_time, processing_time, giocci_time, type) do
     {{year, month, day}, {time, min, sec}} = :calendar.local_time()
 
     file_name =
@@ -73,8 +83,10 @@ defmodule GiocciLog do
         ", " <>
         Integer.to_string(start_time) <>
         ", " <>
-        Integer.to_string(finish_time) <>
-        ", " <> Integer.to_string(giocci_time) <> ", " <> type <> "\n"
+        Integer.to_string(giocci_time) <>
+        ", " <>
+        Integer.to_string(processing_time) <>
+        ", " <> type <> "\n"
 
     IO.inspect(log)
     File.write("data/#{file_name}_detect_log.txt", log, [:append])

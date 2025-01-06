@@ -59,10 +59,10 @@ defmodule GiocciZenoh do
       kind: kind,
       reference: reference
     } = message
-    GiocciLog.finish_time
+
     relay_list = @relay_name
     message_readable = message_intermediate |> Base.decode64!() |> :erlang.binary_to_term()
-
+    GiocciLog.finish_time(message_readable)
     match_key(erkey, relay_list, message_readable)
   end
 
