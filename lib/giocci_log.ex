@@ -48,8 +48,9 @@ defmodule GiocciLog do
 
       "Erlang" ->
         GenServer.cast(__MODULE__, {:put_start_status, type})
-        Giocci.rpc(Giocci.Hello, :world, ["kazuma"])
-        finish_time([{50_000_000, "dummy"}, "dummy"])
+        result = Giocci.rpc(Giocci.Hello, :world, ["kazuma"])
+        IO.inspect(result)
+        finish_time([result, "dummy"])
         Process.sleep(1000)
     end
 
@@ -58,7 +59,7 @@ defmodule GiocciLog do
 
   def finish_time(message) do
     finish_time = System.monotonic_time(:microsecond)
-    [{processing_time, result}, _from_engine] = message
+    [[processing_time, result], _from_engine] = message
     %{start_time: start_time, type: type} = GenServer.call(__MODULE__, :get_start_time)
 
     giocci_time = finish_time - start_time
@@ -81,11 +82,11 @@ defmodule GiocciLog do
     log =
       local_time <>
         ", " <>
-        Integer.to_string(start_time) <>
-        ", " <>
         Integer.to_string(giocci_time) <>
         ", " <>
         Integer.to_string(processing_time) <>
+        ", " <>
+        Integer.to_string(giocci_time - processing_time) <>
         ", " <> type <> "\n"
 
     IO.inspect(log)
