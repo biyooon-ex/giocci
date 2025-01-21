@@ -114,11 +114,13 @@ defmodule GiocciZenoh do
     reason
   end
 
+  @impl true
   def handle_call(:call_publisher, _from, state) do
     reply = [state.publisher, state.client_name, state.relay_name]
     {:reply, reply, state}
   end
 
+  @impl true
   def handle_info(:loop, state) do
     subscriber_loop(state)
     {:noreply, state}
