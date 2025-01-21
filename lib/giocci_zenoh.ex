@@ -164,10 +164,7 @@ defmodule GiocciZenoh do
         send(state.id, :loop)
 
       {:error, error} ->
-        Logger.error(inspect(error))
-
-      {_, _} ->
-        Logger.error("unexpected error")
+        Logger.error("unexpected error #{inspect(error)}")
     end
   end
 end
