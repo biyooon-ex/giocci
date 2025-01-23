@@ -14,7 +14,10 @@ defmodule GiocciZenoh.Detect do
 
     sub_key_prefix = Application.fetch_env!(:giocci, :sub_key_prefix)
     engine_name = Atom.to_string(engine)
-    sub_key = sub_key_prefix <> engine_name <> "/" <> Integer.to_string(magic_number)
+
+    sub_key =
+      sub_key_prefix <> engine_name <> "/detected_data/" <> Integer.to_string(magic_number)
+
     {:ok, subscriber} = Session.declare_subscriber(session, sub_key)
 
     Publisher.put(publisher, payload)
