@@ -16,7 +16,9 @@ defmodule GiocciZenoh do
                  [:system_variables, :my_node_name],
                  "client1"
                )
-  @relay_name Application.get_env(:giocci_zenoh, [:system_variables, :relay_node_name], ["relay1"])
+  @relay_name Application.compile_env(:giocci_zenoh, [:system_variables, :relay_node_name], [
+                "relay1"
+              ])
 
   def module_save(module, relay_name_tosend) do
     ## モジュールをエンコードする
@@ -52,12 +54,10 @@ defmodule GiocciZenoh do
   @doc """
     Engineから(Relayを通して)送られたメッセージを抽出し、表示
   """
-  def callback(state, message) do
+  def callback(_state, message) do
     %{
       key_expr: erkey,
-      value: message_intermediate,
-      kind: kind,
-      reference: reference
+      value: message_intermediate
     } = message
 
     relay_list = @relay_name
@@ -93,18 +93,34 @@ defmodule GiocciZenoh do
     }
 
     ## 上記の状態を保存する用のGenServerの起動
-    Logger.info(id)
+    Logger.info(inspect(id))
     GenServer.start_link(__MODULE__, state, name: id)
     ## subの開始
     subscriber_loop(state)
     {:ok, state}
   end
 
-  def handle_call(:call_publisher, from, state) do
+  def stop(pname) do
+    GenServer.stop(pname)
+  end
+
+  @impl true
+  def init(state) do
+    {:ok, state}
+  end
+
+  @impl true
+  def terminate(reason, _state) do
+    reason
+  end
+
+  @impl true
+  def handle_call(:call_publisher, _from, state) do
     reply = [state.publisher, state.client_name, state.relay_name]
     {:reply, reply, state}
   end
 
+  @impl true
   def handle_info(:loop, state) do
     subscriber_loop(state)
     {:noreply, state}
@@ -148,10 +164,7 @@ defmodule GiocciZenoh do
         send(state.id, :loop)
 
       {:error, error} ->
-        Logger.error(inspect(error))
-
-      {_, _} ->
-        Logger.error("unexpected error")
+        Logger.error("unexpected error #{inspect(error)}")
     end
   end
 end
