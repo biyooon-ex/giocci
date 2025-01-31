@@ -93,7 +93,7 @@ defmodule GiocciZenoh do
     }
 
     ## 上記の状態を保存する用のGenServerの起動
-    Logger.info(id)
+    Logger.info(inspect(id))
     GenServer.start_link(__MODULE__, state, name: id)
     ## subの開始
     subscriber_loop(state)
