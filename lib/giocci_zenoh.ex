@@ -1,45 +1,36 @@
 defmodule GiocciZenoh do
   @moduledoc """
-  `GiocciZenoh.start_link()` で起動する。
+  `GiocciZenoh.setup_client()` で起動する。
 
   ## Examples
 
-      iex> GiocciZenoh.start_link()
+      iex> GiocciZenoh.setup_client()
 
   """
 
   use GenServer
   require Logger
 
-  @client_name Application.compile_env(
-                 :giocci_zenoh,
-                 [:system_variables, :my_node_name],
-                 "client1"
-               )
-  @relay_name Application.compile_env(:giocci_zenoh, [:system_variables, :relay_node_name], [
-                "relay1"
-              ])
-
   def module_save(module, relay_name_tosend) do
     ## モジュールをエンコードする
     encode_module = [Giocci.CLI.ModuleConverter.encode(module), :module_save]
-    id = (@client_name <> relay_name_tosend) |> String.to_atom()
+    id = (my_client_node_name() <> relay_name_tosend) |> String.to_atom()
     ## publisherをセッションから作成しpublishする
-    [publisher, client_name, relay_name] =
+    [publisher, my_client_name, relay_name] =
       GenServer.call(id, :call_publisher)
 
-    Logger.info("from/" <> client_name <> "/to/" <> relay_name)
+    Logger.info("from/" <> my_client_name <> "/to/" <> relay_name)
     Zenohex.Publisher.put(publisher, encode_module |> :erlang.term_to_binary() |> Base.encode64())
   end
 
   def module_exec(module, function, arity, relay_name_tosend) do
     ## publisherをセッションから作成しpublishする
-    id = (@client_name <> relay_name_tosend) |> String.to_atom()
+    id = (my_client_node_name() <> relay_name_tosend) |> String.to_atom()
 
-    [publisher, client_name, relay_name] =
+    [publisher, my_client_name, relay_name] =
       GenServer.call(id, :call_publisher)
 
-    Logger.info("from/" <> client_name <> "/to/" <> relay_name)
+    Logger.info("from/" <> my_client_name <> "/to/" <> relay_name)
 
     Zenohex.Publisher.put(
       publisher,
@@ -48,7 +39,7 @@ defmodule GiocciZenoh do
   end
 
   def setup_client() do
-    create_session(@relay_name)
+    create_session(relay_node_list())
   end
 
   @doc """
@@ -60,7 +51,7 @@ defmodule GiocciZenoh do
       value: message_intermediate
     } = message
 
-    relay_list = @relay_name
+    relay_list = relay_node_list()
     message_readable = message_intermediate |> Base.decode64!() |> :erlang.binary_to_term()
 
     match_key(erkey, relay_list, message_readable)
@@ -71,16 +62,21 @@ defmodule GiocciZenoh do
   """
   def start_link(relay_name) do
     ## ClientのZenohセッションを起動
-    client_name = @client_name
     {:ok, session} = Zenohex.open()
     ## subのキーをたてる
     {:ok, subscriber} =
-      Zenohex.Session.declare_subscriber(session, "from/" <> relay_name <> "/to/" <> client_name)
+      Zenohex.Session.declare_subscriber(
+        session,
+        "from/" <> relay_name <> "/to/" <> my_client_node_name()
+      )
 
     {:ok, publisher} =
-      Zenohex.Session.declare_publisher(session, "from/" <> client_name <> "/to/" <> relay_name)
+      Zenohex.Session.declare_publisher(
+        session,
+        "from/" <> my_client_node_name() <> "/to/" <> relay_name
+      )
 
-    id = (client_name <> relay_name) |> String.to_atom()
+    id = (my_client_node_name() <> relay_name) |> String.to_atom()
     ## 状態として次の状態をもつ
     state = %{
       subscriber: subscriber,
@@ -88,7 +84,7 @@ defmodule GiocciZenoh do
       callback: &callback/2,
       id: id,
       session: session,
-      client_name: client_name,
+      my_client_name: my_client_node_name(),
       relay_name: relay_name
     }
 
@@ -116,7 +112,7 @@ defmodule GiocciZenoh do
 
   @impl true
   def handle_call(:call_publisher, _from, state) do
-    reply = [state.publisher, state.client_name, state.relay_name]
+    reply = [state.publisher, state.my_client_name, state.relay_name]
     {:reply, reply, state}
   end
 
@@ -128,7 +124,7 @@ defmodule GiocciZenoh do
 
   defp match_key(erkey, relay_list, message_readable) do
     Enum.each(relay_list, fn relay_name ->
-      key_applicant = "from/" <> relay_name <> "/to/" <> @client_name
+      key_applicant = "from/" <> relay_name <> "/to/" <> my_client_node_name()
 
       case key_applicant do
         ^erkey ->
@@ -167,4 +163,10 @@ defmodule GiocciZenoh do
         Logger.error("unexpected error #{inspect(error)}")
     end
   end
+
+  defp my_client_node_name(),
+    do: Application.fetch_env!(:giocci, :giocci_zenoh)[:my_client_node_name]
+
+  defp relay_node_list(),
+    do: Application.fetch_env!(:giocci, :giocci_zenoh)[:relay_node_list]
 end

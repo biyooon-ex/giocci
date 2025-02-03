@@ -25,3 +25,6 @@ giocci-*.tar
 # Temporary files, for example, from tests.
 /tmp/
 /.vscode/
+
+# Sample file for Giocci configuration in your application
+.env
