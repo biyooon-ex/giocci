@@ -19,7 +19,6 @@ defmodule GiocciZenoh do
     [publisher, my_client_name, relay_name] =
       GenServer.call(id, :call_publisher)
 
-    Logger.info("from/" <> my_client_name <> "/to/" <> relay_name)
     Zenohex.Publisher.put(publisher, encode_module |> :erlang.term_to_binary() |> Base.encode64())
   end
 
@@ -29,8 +28,6 @@ defmodule GiocciZenoh do
 
     [publisher, my_client_name, relay_name] =
       GenServer.call(id, :call_publisher)
-
-    Logger.info("from/" <> my_client_name <> "/to/" <> relay_name)
 
     Zenohex.Publisher.put(
       publisher,
@@ -63,21 +60,21 @@ defmodule GiocciZenoh do
   def start_link(relay_name) do
     ## ClientのZenohセッションを起動
     {:ok, session} = Zenohex.open()
-    ## subのキーをたてる
+    ## pubsubのキーをたてる
     {:ok, subscriber} =
       Zenohex.Session.declare_subscriber(
         session,
-        "from/" <> relay_name <> "/to/" <> my_client_node_name()
+        "key_prefix/giocci/relay_to_client/" <> relay_name <> "/" <> my_client_node_name()
       )
 
     {:ok, publisher} =
       Zenohex.Session.declare_publisher(
         session,
-        "from/" <> my_client_node_name() <> "/to/" <> relay_name
+        "key_prefix/giocci/client_to_relay/" <> my_client_node_name() <> "/" <> relay_name
       )
 
     id = (my_client_node_name() <> relay_name) |> String.to_atom()
-    ## 状態として次の状態をもつ
+
     state = %{
       subscriber: subscriber,
       publisher: publisher,
@@ -124,7 +121,8 @@ defmodule GiocciZenoh do
 
   defp match_key(erkey, relay_list, message_readable) do
     Enum.each(relay_list, fn relay_name ->
-      key_applicant = "from/" <> relay_name <> "/to/" <> my_client_node_name()
+      key_applicant =
+        "key_prefix/giocci/relay_to_client/" <> relay_name <> "/" <> my_client_node_name()
 
       case key_applicant do
         ^erkey ->
