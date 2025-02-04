@@ -19,7 +19,6 @@ defmodule GiocciZenoh do
     [publisher, my_client_name, relay_name] =
       GenServer.call(id, :call_publisher)
 
-    Logger.info("from/" <> my_client_name <> "/to/" <> relay_name)
     Zenohex.Publisher.put(publisher, encode_module |> :erlang.term_to_binary() |> Base.encode64())
   end
 
@@ -30,8 +29,6 @@ defmodule GiocciZenoh do
     [publisher, my_client_name, relay_name] =
       GenServer.call(id, :call_publisher)
 
-    Logger.info("from/" <> my_client_name <> "/to/" <> relay_name)
-
     Zenohex.Publisher.put(
       publisher,
       [module, function, arity, :module_exec] |> :erlang.term_to_binary() |> Base.encode64()
@@ -39,6 +36,32 @@ defmodule GiocciZenoh do
   end
 
   def setup_client() do
+    ## sub用のセッションとキーを設定
+
+    {:ok, session} = Zenohex.open()
+    ## subのキーをたてる
+    {:ok, subscriber} =
+      Zenohex.Session.declare_subscriber(
+        session,
+        "key_prefix/giocci/relay_to_client/" <> my_client_node_name()
+      )
+
+    id = (my_client_node_name() <> "sub") |> String.to_atom()
+
+    state = %{
+      subscriber: subscriber,
+      callback: &callback/2,
+      id: id,
+      session: session,
+      my_client_name: my_client_node_name()
+    }
+
+    ## 上記の状態を保存する用のGenServerの起動
+    Logger.info(inspect(id))
+    GenServer.start_link(__MODULE__, state, name: id)
+    ## subの開始
+    subscriber_loop(state)
+    {:ok, state}
     create_session(relay_node_list())
   end
 
@@ -51,10 +74,8 @@ defmodule GiocciZenoh do
       value: message_intermediate
     } = message
 
-    relay_list = relay_node_list()
     message_readable = message_intermediate |> Base.decode64!() |> :erlang.binary_to_term()
-
-    match_key(erkey, relay_list, message_readable)
+    Logger.info("#{inspect(message_readable)}")
   end
 
   @doc """
@@ -63,25 +84,24 @@ defmodule GiocciZenoh do
   def start_link(relay_name) do
     ## ClientのZenohセッションを起動
     {:ok, session} = Zenohex.open()
-    ## subのキーをたてる
-    {:ok, subscriber} =
-      Zenohex.Session.declare_subscriber(
-        session,
-        "from/" <> relay_name <> "/to/" <> my_client_node_name()
-      )
+
+    # ## subのキーをたてる
+    # {:ok, subscriber} =
+    #   Zenohex.Session.declare_subscriber(
+    #     session,
+    #     "key_prefix/giocci/relay_to_client/" <> my_client_node_name()
+    # )
 
     {:ok, publisher} =
       Zenohex.Session.declare_publisher(
         session,
-        "from/" <> my_client_node_name() <> "/to/" <> relay_name
+        "key_prefix/giocci/client_to_relay/" <> relay_name
       )
 
     id = (my_client_node_name() <> relay_name) |> String.to_atom()
     ## 状態として次の状態をもつ
     state = %{
-      subscriber: subscriber,
       publisher: publisher,
-      callback: &callback/2,
       id: id,
       session: session,
       my_client_name: my_client_node_name(),
@@ -91,8 +111,6 @@ defmodule GiocciZenoh do
     ## 上記の状態を保存する用のGenServerの起動
     Logger.info(inspect(id))
     GenServer.start_link(__MODULE__, state, name: id)
-    ## subの開始
-    subscriber_loop(state)
     {:ok, state}
   end
 
@@ -120,21 +138,6 @@ defmodule GiocciZenoh do
   def handle_info(:loop, state) do
     subscriber_loop(state)
     {:noreply, state}
-  end
-
-  defp match_key(erkey, relay_list, message_readable) do
-    Enum.each(relay_list, fn relay_name ->
-      key_applicant = "from/" <> relay_name <> "/to/" <> my_client_node_name()
-
-      case key_applicant do
-        ^erkey ->
-          Logger.info("message from #{relay_name} key name is  #{key_applicant}")
-          Logger.info("#{inspect(message_readable)}")
-
-        _ ->
-          nil
-      end
-    end)
   end
 
   defp create_session([]) do
