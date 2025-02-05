@@ -38,7 +38,13 @@ On Elixir runtime,do
 GiocciZenoh.setup_client()
 ``` 
 
-After all Giocci setup including giocci_relay and giocci_engine,you can use giocci
+After all Giocci setup including giocci_relay and giocci_engine,you can setup Zenoh router
+```sh
+Zenohd -e tcp/GlobalIP at Relay:7447
+```
+
+
+In the end,you can use giocci
 
 ## Usage
 
