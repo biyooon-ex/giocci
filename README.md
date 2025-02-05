@@ -8,12 +8,11 @@ Client Library for Giocci
 
 ## Description
 
-Giocci is a computational resource permeating wide-area distributed platform towards the B5G era.
+<!-- Giocci is a computational resource permeating wide-area distributed platform towards the B5G era. -->
 
 This repository is a library that provides functionality for the client in Giocci environment.
 It should be used with [giocci_relay](https://github.com/b5g-ex/giocci_relay) [giocci_engine](https://github.com/b5g-ex/giocci_engine) installed onto Giocci server(s).
 
-The detailed instructions will be appeared ASAP,,,
 
 
 ## 実行の際に必要となる他のリポジトリについて
@@ -49,7 +48,7 @@ end
 これによりgiocciのインストールは完了です。
 
 
-##　準備方法
+## 準備方法
 
 ### Relayの準備
 次に、Relayを配置するサーバに以下のコマンドにより、giocci_relayをクローンします。
@@ -101,7 +100,7 @@ zenohd -e tcp/RelayのGlobalIP:7447
 
 
 
-##　実行方法例　〜giocci_exampleを基に〜
+## 実行方法例　〜giocci_exampleを基に〜
 
 以上の準備を終えた状態でGiocciの実行例を述べます。
 
@@ -134,7 +133,7 @@ end
 
 以上でモジュールを送信し、実行する準備は完了です。
 
-###　1.モジュールの送信
+### 1.モジュールの送信
 モジュールの送信では以下の関数を用います。この関数の第一引数は、送信するモジュール名で、第二引数はこのリクエスト送信するRelayの名前の文字列です。
 ```sh
 GiocciZenoh.module_save(Module_name,"relay_name")
@@ -142,7 +141,7 @@ GiocciZenoh.module_save(Module_name,"relay_name")
 
 今回はGiocciExampleのモジュールを先程用意した"Relay1"に送信するため、`GiocciZenoh.module_save(GiocciExample,"relay1")`をElixir上で実行します。
 
-Engine上で"[info] v module: GiocciExample is loaded."が出れば成功です。
+Engine上で`[info] v module: GiocciExample is loaded.`が出れば成功です。
 
 ### 2.モジュールの実行
 モジュールの実行では以下の関数を用います。この関数の第一引数は、送信するモジュール名で、第二引数は実行する関数名のアトム、第三引数は実行する関数に渡す引数のリスト、第四引数はこのリクエストを送信するRelayの名前の文字列です。
@@ -153,7 +152,7 @@ GiocciZenoh.module_exec(Module_name,:function,["arity"],"relay_name")
 
 今回は先程保存したGiocciExampleのモジュールの、world関数に"kazuma"の引数を与え、"relay1"にリクエストを行うので、`GiocciZenoh.module_exec(GiocciExample,:world,["kazuma"],"relay1")`を実行します。
 
-giocci_exampleに実行時間と引数の文字を含んだ"[[XXXX, "Hello kazuma!!"], " from engine"]"が現れれば成功です。
+giocci_exampleに実行時間と引数の文字を含んだ`[[XXXX, "Hello kazuma!!"], " from engine"]`が現れれば成功です。
 
 
 
