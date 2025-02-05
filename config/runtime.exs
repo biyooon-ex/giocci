@@ -13,4 +13,5 @@ config :giocci, :giocci_zenoh,
   my_client_node_name: env!("MY_CLIENT_NODE_NAME", :string, "client1"),
   # The nodes' name for Giocci relays
   relay_node_list:
-    env!("RELAY_NODE_LIST", :string, "relay1, relay2, relay3") |> String.split(~r/[ ,]+/)
+    env!("RELAY_NODE_LIST", :string, "relay1, relay2, relay3") |> String.split(~r/[ ,]+/),
+  key_prefix: env!("KEY_PREFIX", :string, "")

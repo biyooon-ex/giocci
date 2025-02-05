@@ -167,4 +167,7 @@ defmodule GiocciZenoh do
 
   defp relay_node_list(),
     do: Application.fetch_env!(:giocci, :giocci_zenoh)[:relay_node_list]
+
+  defp key_prefix(),
+    do: Application.fetch_env!(:giocci, :giocci_zenoh)[:key_prefix]
 end
