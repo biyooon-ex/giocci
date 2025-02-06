@@ -2,26 +2,18 @@
 [![API docs](https://img.shields.io/hexpm/v/giocci.svg?label=hexdocs "API docs")](https://hexdocs.pm/giocci)
 [![License](https://img.shields.io/hexpm/l/giocci.svg)](https://github.com/b5g-ex/giocci/blob/main/LICENSE)
 
-# Giocci
 
-Client Library for Giocci
 
-## Description
-
-<!-- Giocci is a computational resource permeating wide-area distributed platform towards the B5G era. -->
-
-This repository is a library that provides functionality for the client in Giocci environment.
-It should be used with [giocci_relay](https://github.com/b5g-ex/giocci_relay) [giocci_engine](https://github.com/b5g-ex/giocci_engine) installed onto Giocci server(s).
+資源透過型計算資源プラットフォームGiocciのクライアントライブラリです
 
 
 
 ## 実行の際に必要となる他のリポジトリについて
 
-このリポジトリgiocciは、giocci_relay、giocci_engine、と同時に使用します。
-また、giocciはライブラリの形で読み込んで使用します。
+このリポジトリgiocciは、giocci_relay(https://github.com/biyooon-ex/giocci_relay)、giocci_engine(https://github.com/biyooon-ex/giocci_engine)、と同時に使用します。
+また、giocciはライブラリとして読み込んで使用します。
 
 
-試用の際はgiocci_exampleリポジトリを推奨します。
 
 
 ## 実行環境
@@ -63,9 +55,9 @@ git clone https://github.com/biyooon-ex/giocci_relay.git
 zenohd 
 ```
 
-その後config/runtime.exsのmy_node_nameの値をこのRelayの名前とし、文字列で名付けます。
+その後config/runtime.exsのmy_node_nameの値をこのRelayの名前とし、文字列の形式で設定します。
 また、config/runtime.exsのengine_node_nameに使用するEngineの名前の文字列をリスト形式で入力します。
-そして、config/runtime.exsのclient_node_nameに使用するClientの名前を文字列で名付けます。
+そして、config/runtime.exsのclient_node_nameに使用するClientの名前を文字列の形式で設定します。
 
 以上でRelayの準備は完了です。
 
@@ -77,11 +69,11 @@ zenohd
 git clone https://github.com/biyooon-ex/giocci_engine.git
 ```
 その後、`cd giocci_engine`でディレクトリを移動した後、`mix deps.get`により必要なモジュールを読み込みます。
-また、Zenohを使用するため、以下のコマンドでZenohのルータを立ち上げ、RelayのZenohルータにカスケードします。ただし、RelayのグローバルIPは各自書き換えてください。
+また、Zenohを使用するため、以下のコマンドでZenohのルータを立ち上げ、RelayのZenohルータにカスケードします。ただし、RelayのグローバルIPは各自適切なものに書き換えてください。
 ```sh
 zenohd -e tcp/RelayのGlobalIP:7447
 ```
-その後config/runtime.exsのmy_node_nameの値をこのEngineの名前とし、文字列で名付けます。
+その後config/runtime.exsのmy_node_nameの値をこのEngineの名前とし、文字列の形式で設定します。
 また、config/runtime.exsのrelay_node_nameに使用するRelayの名前の文字列をリスト形式で入力します。
 
 
@@ -91,11 +83,11 @@ zenohd -e tcp/RelayのGlobalIP:7447
 
 ### Client(giocci)の準備
 
-giocciをインポートした環境で、以下のコマンドでZenohルータを立ち上げ、Relayのルータにカスケードします。ただし、RelayのグローバルIPは各自書き換えてしてください。
+giocciをインポートした環境で、以下のコマンドでZenohルータを立ち上げ、Relayのルータにカスケードします。ただし、RelayのグローバルIPは各自適切なものに書き換えてしてください。
 ```sh
 zenohd -e tcp/RelayのGlobalIP:7447
 ```
-その後config/runtime.exsのmy_client_node_nameの値をこのClientの名前とし、文字列で名付けます。
+その後config/runtime.exsのmy_client_node_nameの値をこのClientの名前とし、文字列の形式で設定します。
 また、config/runtime.exsのrelay_node_listに使用するRelayの名前の文字列をリスト形式で入力します。
 
 
@@ -128,7 +120,7 @@ def deps do
 end
 ```
 
-その後`mix dpes.get`によりgiocciをインポートした後、`iex -S mix`によりElixirを起動します。
+その後`mix dpes.get`によりgiocciをインストールした後、`iex -S mix`によりElixirを起動します。
 そして`GiocciZenoh.setup_client()`でセットアップを完了します。 
 
 以上でモジュールを送信し、実行する準備は完了です。
@@ -141,7 +133,7 @@ GiocciZenoh.module_save(Module_name,"relay_name")
 
 今回はGiocciExampleのモジュールを先程用意した"Relay1"に送信するため、`GiocciZenoh.module_save(GiocciExample,"relay1")`をElixir上で実行します。
 
-Engine上で`[info] v module: GiocciExample is loaded.`が出れば成功です。
+Engine上のターミナルで`[info] v module: GiocciExample is loaded.`が出れば成功です。
 
 ### 2.モジュールの実行
 モジュールの実行では以下の関数を用います。この関数の第一引数は、送信するモジュール名で、第二引数は実行する関数名のアトム、第三引数は実行する関数に渡す引数のリスト、第四引数はこのリクエストを送信するRelayの名前の文字列です。
@@ -152,7 +144,7 @@ GiocciZenoh.module_exec(Module_name,:function,["arity"],"relay_name")
 
 今回は先程保存したGiocciExampleのモジュールの、world関数に"kazuma"の引数を与え、"relay1"にリクエストを行うので、`GiocciZenoh.module_exec(GiocciExample,:world,["kazuma"],"relay1")`を実行します。
 
-giocci_exampleに実行時間と引数の文字を含んだ`[[XXXX, "Hello kazuma!!"], " from engine"]`が現れれば成功です。
+giocci_exampleに実行時間と引数の文字を含む`[[XXXX, "Hello kazuma!!"], " from engine"]`が表示されれば成功です。
 
 
 
