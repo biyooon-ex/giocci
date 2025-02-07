@@ -16,7 +16,7 @@ defmodule GiocciZenoh do
     encode_module = [Giocci.CLI.ModuleConverter.encode(module), :module_save]
     id = (my_client_node_name() <> relay_name_tosend) |> String.to_atom()
     ## publisherをセッションから作成しpublishする
-    [publisher, my_client_name, relay_name] =
+    [publisher, _my_client_name, _relay_name] =
       GenServer.call(id, :call_publisher)
 
     Zenohex.Publisher.put(publisher, encode_module |> :erlang.term_to_binary() |> Base.encode64())
@@ -26,7 +26,7 @@ defmodule GiocciZenoh do
     ## publisherをセッションから作成しpublishする
     id = (my_client_node_name() <> relay_name_tosend) |> String.to_atom()
 
-    [publisher, my_client_name, relay_name] =
+    [publisher, _my_client_name, _relay_name] =
       GenServer.call(id, :call_publisher)
 
     Zenohex.Publisher.put(
@@ -64,13 +64,13 @@ defmodule GiocciZenoh do
     {:ok, subscriber} =
       Zenohex.Session.declare_subscriber(
         session,
-        "key_prefix/giocci/relay_to_client/" <> relay_name <> "/" <> my_client_node_name()
+        key_prefix() <> "giocci/relay_to_client/" <> relay_name <> "/" <> my_client_node_name()
       )
 
     {:ok, publisher} =
       Zenohex.Session.declare_publisher(
         session,
-        "key_prefix/giocci/client_to_relay/" <> my_client_node_name() <> "/" <> relay_name
+        key_prefix() <> "giocci/client_to_relay/" <> my_client_node_name() <> "/" <> relay_name
       )
 
     id = (my_client_node_name() <> relay_name) |> String.to_atom()
@@ -122,7 +122,7 @@ defmodule GiocciZenoh do
   defp match_key(erkey, relay_list, message_readable) do
     Enum.each(relay_list, fn relay_name ->
       key_applicant =
-        "key_prefix/giocci/relay_to_client/" <> relay_name <> "/" <> my_client_node_name()
+        key_prefix() <> "giocci/relay_to_client/" <> relay_name <> "/" <> my_client_node_name()
 
       case key_applicant do
         ^erkey ->
@@ -167,4 +167,14 @@ defmodule GiocciZenoh do
 
   defp relay_node_list(),
     do: Application.fetch_env!(:giocci, :giocci_zenoh)[:relay_node_list]
+
+  defp key_prefix() do
+    prefix = Application.fetch_env!(:giocci, :giocci_zenoh)[:key_prefix]
+
+    if prefix == nil or prefix == "" do
+      ""
+    else
+      prefix <> "/"
+    end
+  end
 end
