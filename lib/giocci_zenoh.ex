@@ -171,7 +171,7 @@ defmodule GiocciZenoh do
   defp key_prefix() do
     prefix = Application.fetch_env!(:giocci, :giocci_zenoh)[:key_prefix]
 
-    if prefix == "" do
+    if prefix == nil or prefix == "" do
       ""
     else
       prefix <> "/"
