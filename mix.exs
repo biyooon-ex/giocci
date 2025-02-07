@@ -47,8 +47,7 @@ defmodule Giocci.MixProject do
         "lib",
         "mix.exs",
         "README.md",
-        "LICENSE",
-        ".env*"
+        "LICENSE"
       ],
       licenses: ["Apache-2.0"],
       links: %{"Github" => @source_url}
