@@ -5,7 +5,7 @@ defmodule Giocci.MixProject do
   Client Library for Giocci (computational resource permeating wide-area distributed platform towards the B5G era)
   """
 
-  @version "0.3.0-rc1"
+  @version "0.3.0-rc2"
   @source_url "https://github.com/b5g-ex/giocci"
 
   def project do
@@ -35,6 +35,7 @@ defmodule Giocci.MixProject do
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},
+      {:dotenvy, "~> 1.0.0"},
       {:zenohex, "~>0.3.2"}
     ]
   end
@@ -46,7 +47,8 @@ defmodule Giocci.MixProject do
         "lib",
         "mix.exs",
         "README.md",
-        "LICENSE"
+        "LICENSE",
+        ".env*"
       ],
       licenses: ["Apache-2.0"],
       links: %{"Github" => @source_url}
