@@ -1,4 +1,4 @@
-FROM hexpm/elixir:1.19.5-erlang-28.3-ubuntu-noble-20260410 AS builder
+FROM hexpm/elixir:1.19.5-erlang-28.5-ubuntu-noble-20260410 AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
